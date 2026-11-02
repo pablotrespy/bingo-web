@@ -80,9 +80,6 @@ export default function DashboardPage() {
               : "Administración de la organización"}
           </h2>
 
-          <p className="mt-2 max-w-2xl text-slate-400">
-            Bienvenido, {name}.
-          </p>
         </div>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
