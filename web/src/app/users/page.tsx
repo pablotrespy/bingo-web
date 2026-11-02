@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<Array<{ id: string; publicCode?: string; fullName: string; email: string; isActive: boolean; roleCode?: string }>>([]);
+  const [users, setUsers] = useState<Array<{ id: string; publicCode?: string; fullName: string; identification?: string; email: string; isActive: boolean; roleCode?: string }>>([]);
   const [sessionUser, setSessionUser] = useState<{ fullName?: string; email?: string; roles?: Array<string | { code?: string }> }>({});
   useEffect(() => { const token = window.localStorage.getItem("bingo_access_token"); const storedUser = window.localStorage.getItem("bingo_user"); if (storedUser) { try { setSessionUser(JSON.parse(storedUser)); } catch { setSessionUser({}); } } fetch("http://localhost:3000/users", { headers: { Authorization: `Bearer ${token ?? ""}` } }).then((r) => r.ok ? r.json() : []).then(setUsers); }, []);
   const currentName = sessionUser.fullName || sessionUser.email || "Usuario";
@@ -32,10 +32,10 @@ export default function UsersPage() {
         </div>
 
         <section className="mt-8 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-          <div className="grid grid-cols-[1fr_1.4fr_1.4fr_1fr_1.2fr] gap-4 border-b border-slate-800 px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <span>ID</span><span>Nombre</span><span>Correo</span><span>Estado</span><span className="text-right">Acciones</span>
+          <div className="grid grid-cols-[1fr_1.3fr_1fr_1.4fr_1fr_1.2fr] gap-4 border-b border-slate-800 px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <span>ID</span><span>Nombre</span><span>C.C.</span><span>Correo</span><span>Estado</span><span className="text-right">Acciones</span>
           </div>
-          {users.length === 0 ? <div className="px-6 py-14 text-center text-sm text-slate-500">No hay usuarios registrados todavía.</div> : users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_1.4fr_1.4fr_1fr_1.2fr] gap-4 border-b border-slate-800 px-6 py-5 text-sm"><span className="font-mono text-sm font-semibold text-cyan-300">{user.publicCode ?? "—"}</span><span>{user.fullName}</span><span>{user.email}</span><span className="text-cyan-300">{user.isActive ? "ACTIVO" : "INACTIVO"}</span><span className="text-right text-xs text-slate-400">{user.roleCode ?? "—"}</span></div>)}
+          {users.length === 0 ? <div className="px-6 py-14 text-center text-sm text-slate-500">No hay usuarios registrados todavía.</div> : users.map((user) => <div key={user.id} className="grid grid-cols-[1fr_1.3fr_1fr_1.4fr_1fr_1.2fr] gap-4 border-b border-slate-800 px-6 py-5 text-sm"><span className="font-mono text-sm font-semibold text-cyan-300">{user.publicCode ?? "—"}</span><span>{user.fullName}</span><span>{user.identification ?? "—"}</span><span>{user.email}</span><span className="text-cyan-300">{user.isActive ? "ACTIVO" : "INACTIVO"}</span><span className="text-right text-xs text-slate-400">{user.roleCode ?? "—"}</span></div>)}
         </section>
       </div>
     </main>
