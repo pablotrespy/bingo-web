@@ -42,6 +42,9 @@ export class GamesService {
     await this.pool.query(
       `CREATE TABLE IF NOT EXISTS bingo_sales (id uuid PRIMARY KEY, sale_code varchar(7) UNIQUE NOT NULL, game_id uuid NOT NULL REFERENCES bingo_games(id), customer_document text, quantity integer NOT NULL, range_start integer NOT NULL, range_end integer NOT NULL, created_at timestamptz NOT NULL DEFAULT now())`,
     );
+    await this.pool.query(`CREATE TABLE IF NOT EXISTS cashier_shifts (id uuid PRIMARY KEY, organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT, local_id uuid NOT NULL REFERENCES locals(id) ON DELETE RESTRICT, seller_user_id uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT, opened_at timestamptz NOT NULL DEFAULT now(), closed_at timestamptz NULL, status text NOT NULL DEFAULT 'ABIERTA', cards_sold integer NOT NULL DEFAULT 0, amount numeric(14,2) NOT NULL DEFAULT 0, notes text NULL, CHECK (status IN ('ABIERTA','CERRADA')))`);
+    await this.pool.query(`ALTER TABLE bingo_sales ADD COLUMN IF NOT EXISTS cashier_shift_id uuid NULL REFERENCES cashier_shifts(id) ON DELETE RESTRICT`);
+    await this.pool.query(`CREATE INDEX IF NOT EXISTS bingo_sales_cashier_shift_idx ON bingo_sales(cashier_shift_id)`);
   }
   private readonly statusSql = `CASE WHEN d.finished THEN 'FINALIZADA' WHEN g.started_at IS NOT NULL THEN 'EN JUEGO' WHEN now() < g.sale_open_at THEN 'PROGRAMADO' WHEN now() < g.sale_close_at THEN 'VENTA' WHEN g.cards_sold = 0 AND now() >= g.sale_close_at + interval '2 minutes' THEN 'CANCELADO' WHEN now() >= g.bingo_at + interval '10 minutes' THEN 'CANCELADO' ELSE 'VENTA CERRADA' END`;
   async create(input: Record<string, unknown>) {
