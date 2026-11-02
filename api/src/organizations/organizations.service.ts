@@ -16,6 +16,11 @@ export class OrganizationsService {
     return result.rows;
   }
 
+  async mine(userId: string) {
+    const result = await this.pool.query(`SELECT o.id, o.public_code AS "publicCode", o.name, o.legal_name AS "legalName", o.status FROM organizations o INNER JOIN memberships m ON m.organization_id=o.id WHERE m.user_id=$1 AND m.status='ACTIVE' ORDER BY o.created_at ASC`, [userId]);
+    return result.rows;
+  }
+
   async create(input: { name: string; tradeName?: string; taxId?: string; phone?: string; email?: string; postalCode?: string }) {
     const name = input.name?.trim();
     if (!name) throw new BadRequestException('El nombre de la organización es obligatorio');

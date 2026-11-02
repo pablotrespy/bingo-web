@@ -14,6 +14,7 @@ type SessionUser = {
 export default function DashboardPage() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [userCount, setUserCount] = useState(0);
+  const [organizationName, setOrganizationName] = useState("Organización");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("bingo_user");
@@ -27,6 +28,7 @@ export default function DashboardPage() {
     }
     const token = window.localStorage.getItem("bingo_access_token");
     fetch("http://localhost:3000/users", { headers: { Authorization: `Bearer ${token ?? ""}` } }).then((response) => response.ok ? response.json() : []).then((items: unknown[]) => setUserCount(items.length));
+    fetch("http://localhost:3000/organizations/mine", { headers: { Authorization: `Bearer ${token ?? ""}` } }).then((response) => response.ok ? response.json() : []).then((items: Array<{ name?: string }>) => { if (items[0]?.name) setOrganizationName(items[0].name); });
   }, []);
 
   const name = user?.fullName || user?.name || user?.email || "Usuario";
@@ -49,9 +51,7 @@ export default function DashboardPage() {
               BINGO-WEB
             </p>
             <h1 className="mt-1 text-xl font-semibold">
-              {isPlatformAdmin
-                ? "Panel de Ingeniería"
-                : "Panel de Organización"}
+              {isPlatformAdmin ? "Panel de Ingeniería" : organizationName}
             </h1>
           </div>
 
