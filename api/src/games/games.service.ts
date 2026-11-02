@@ -191,6 +191,13 @@ export class GamesService {
     if (!cashierShiftId && input.sellerUserId) {
       const shift = await this.pool.query(`SELECT s.id FROM cashier_shifts s JOIN bingo_games g ON g.room_id IN (SELECT id FROM rooms WHERE local_id=s.local_id) WHERE g.id=$1 AND s.seller_user_id=$2 AND s.status='ABIERTA' ORDER BY s.opened_at DESC LIMIT 1`, [id, input.sellerUserId]);
       cashierShiftId = shift.rows[0]?.id;
+      if (!cashierShiftId) {
+        const local = await this.pool.query(`SELECT r.local_id AS "localId", l.organization_id AS "organizationId" FROM bingo_games g JOIN rooms r ON r.id=g.room_id JOIN locals l ON l.id=r.local_id WHERE g.id=$1`, [id]);
+        if (local.rowCount) {
+          const created = await this.pool.query(`INSERT INTO cashier_shifts (id,organization_id,local_id,seller_user_id) VALUES ($1,$2,$3,$4) RETURNING id`, [randomUUID(), local.rows[0].organizationId, local.rows[0].localId, input.sellerUserId]);
+          cashierShiftId = created.rows[0].id;
+        }
+      }
     }
     if (!cashierShiftId) throw new BadRequestException('Debe abrir una jornada de caja antes de vender');
     const shift = await this.pool.query(`SELECT id FROM cashier_shifts WHERE id=$1 AND status='ABIERTA'`, [cashierShiftId]);
