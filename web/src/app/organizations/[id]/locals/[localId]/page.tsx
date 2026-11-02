@@ -7,7 +7,6 @@ type Local = { id: string; publicCode?: string; name: string; isActive: boolean 
 
 const modules = [
   { key: "mesa-control", title: "Mesa de control", description: "Iniciar y supervisar la partida central.", href: "mesa-control", roles: ["ORG_ADMIN", "LOCAL_ADMIN", "SUPERVISOR", "OPERADOR_BINGO"] },
-  { key: "tablero", title: "Tablero de números", description: "Visualizar las balotas y el estado del bingo.", href: "tablero", roles: ["ORG_ADMIN", "LOCAL_ADMIN", "SUPERVISOR", "OPERADOR_BINGO"] },
   { key: "ventas-caja", title: "Ventas y Caja", description: "Registrar ventas, recaudos, pagos y cierre de caja.", href: "ventas-caja", roles: ["ORG_ADMIN", "LOCAL_ADMIN", "SUPERVISOR", "CAJERO_VENDEDOR"] },
   { key: "caja", title: "Resumen de Caja", description: "Consultar el movimiento acumulado y cerrar la jornada del vendedor.", href: "caja", roles: ["ORG_ADMIN", "LOCAL_ADMIN", "SUPERVISOR", "CAJERO_VENDEDOR"] },
   { key: "lista-jugadas", title: "Lista de jugadas", description: "Consultar las jugadas disponibles para este local.", href: "lista-jugadas", roles: ["ORG_ADMIN", "LOCAL_ADMIN", "SUPERVISOR", "OPERADOR_BINGO", "CAJERO_VENDEDOR"] },
