@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function CajaPage() { return <main className="min-h-screen bg-slate-950 p-8 text-white"><Link href=".." className="text-cyan-300">← Volver al local</Link><section className="mx-auto mt-12 max-w-4xl rounded-2xl border border-slate-800 bg-slate-900 p-8"><h1 className="text-3xl font-semibold">Caja</h1><p className="mt-3 text-slate-400">Aquí se controlarán recaudos, pagos de premios y cierres de caja.</p></section></main>; }

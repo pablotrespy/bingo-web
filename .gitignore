@@ -1,0 +1,32 @@
+# Dependencias y builds
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/coverage/
+**/*.tsbuildinfo
+
+# Secretos y configuración local
+**/.env
+**/.env.*
+!.env.example
+**/*.pem
+
+# Datos y respaldos locales
+backups/
+**/generated/
+*.dump
+*.sql
+*.log
+
+# Instrucciones auxiliares locales de herramientas
+**/.agents/
+**/.claude/
+**/.windsurf/
+**/.git-legacy-backup/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

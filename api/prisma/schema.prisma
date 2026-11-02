@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrganizationStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+  ARCHIVED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum ScopeType {
+  PLATFORM
+  ORGANIZATION
+  LOCAL
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  SUSPEND
+  REVOKE
+  ACTIVATE
+  LOGIN
+  LOGOUT
+  ACCESS_DENIED
+  ORGANIZATION_SWITCH
+}
+
+model Organization {
+  publicCode  String?            @unique @map("public_code") @db.Char(6)
+  tradeName   String?            @map("trade_name")
+  taxId       String?            @map("tax_id")
+  phone       String?
+  email       String?
+  postalCode  String?            @map("postal_code")
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String
+  legalName   String?            @map("legal_name")
+  status      OrganizationStatus @default(PENDING)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  locals      Local[]
+  memberships Membership[]
+  auditLogs   AuditLog[]
+
+  @@index([status])
+  @@map("organizations")
+}
+
+model Local {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  name           String
+  code           String
+  isActive       Boolean           @default(true) @map("is_active")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  assignments    LocalAssignment[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("locals")
+}
+
+model User {
+  publicCode         String?            @unique @map("public_code") @db.Char(6)
+  mustChangePassword Boolean            @default(false) @map("must_change_password")
+  identification     String?            @unique @map("identification")
+  id                 String             @id @default(uuid()) @db.Uuid
+  email              String             @unique
+  fullName           String             @map("full_name")
+  passwordHash       String             @map("password_hash")
+  isActive           Boolean            @default(true) @map("is_active")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  memberships        Membership[]
+  platformRoles      UserPlatformRole[]
+  auditLogs          AuditLog[]         @relation("AuditActor")
+
+  @@map("users")
+}
+
+model UserPlatformRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+  @@map("user_platform_roles")
+}
+
+model Membership {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  status         MembershipStatus  @default(ACTIVE)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  user           User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  roles          MembershipRole[]
+  localAccess    LocalAssignment[]
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, status])
+  @@map("memberships")
+}
+
+model Role {
+  platformUsers   UserPlatformRole[]
+  id              String             @id @default(uuid()) @db.Uuid
+  code            String             @unique
+  name            String
+  description     String?
+  scopeType       ScopeType          @map("scope_type")
+  isSystem        Boolean            @default(true) @map("is_system")
+  membershipRoles MembershipRole[]
+  permissions     RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  code        String           @unique
+  name        String
+  description String?
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model MembershipRole {
+  membershipId String     @map("membership_id") @db.Uuid
+  roleId       String     @map("role_id") @db.Uuid
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([membershipId, roleId])
+  @@map("membership_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model LocalAssignment {
+  membershipId String     @map("membership_id") @db.Uuid
+  localId      String     @map("local_id") @db.Uuid
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  local        Local      @relation(fields: [localId], references: [id], onDelete: Restrict)
+
+  @@id([membershipId, localId])
+  @@map("local_assignments")
+}
+
+model AuditLog {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  actorUserId    String?       @map("actor_user_id") @db.Uuid
+  action         AuditAction
+  resource       String
+  resourceId     String?       @map("resource_id")
+  metadata       Json?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor          User?         @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("audit_logs")
+}

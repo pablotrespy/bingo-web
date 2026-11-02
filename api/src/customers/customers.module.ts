@@ -1,0 +1,2 @@
+import { Module } from '@nestjs/common'; import { JwtModule } from '@nestjs/jwt'; import { JwtAuthGuard } from '../auth/jwt-auth.guard'; import { CustomersController } from './customers.controller'; import { CustomersService } from './customers.service';
+@Module({imports:[JwtModule.register({secret:process.env.JWT_SECRET})],controllers:[CustomersController],providers:[CustomersService,JwtAuthGuard]}) export class CustomersModule{}
