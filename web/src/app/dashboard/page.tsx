@@ -13,6 +13,7 @@ type SessionUser = {
 
 export default function DashboardPage() {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [userCount, setUserCount] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("bingo_user");
@@ -24,6 +25,8 @@ export default function DashboardPage() {
         localStorage.removeItem("bingo_user");
       }
     }
+    const token = window.localStorage.getItem("bingo_access_token");
+    fetch("http://localhost:3000/users", { headers: { Authorization: `Bearer ${token ?? ""}` } }).then((response) => response.ok ? response.json() : []).then((items: unknown[]) => setUserCount(items.length));
   }, []);
 
   const name = user?.fullName || user?.name || user?.email || "Usuario";
@@ -101,7 +104,7 @@ export default function DashboardPage() {
             className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg transition hover:border-cyan-400/60"
           >
             <p className="text-sm text-slate-400">Usuarios</p>
-            <p className="mt-4 text-3xl font-semibold">1</p>
+              <p className="mt-4 text-3xl font-semibold">{userCount}</p>
             <p className="mt-2 text-xs text-cyan-300">
               Usuarios registrados
             </p>
