@@ -6,11 +6,12 @@ import { LocalsModule } from './locals/locals.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { GamesModule } from './games/games.module';
 import { CustomersModule } from './customers/customers.module';
+import { CashierModule } from './cashier/cashier.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 @Module({
-  imports: [AuthModule, OrganizationsModule, UsersModule, LocalsModule, RoomsModule, GamesModule, CustomersModule],
+  imports: [AuthModule, OrganizationsModule, UsersModule, LocalsModule, RoomsModule, GamesModule, CustomersModule, CashierModule],
   controllers: [AppController],
   providers: [AppService],
 })

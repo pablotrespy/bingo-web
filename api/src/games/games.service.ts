@@ -175,7 +175,7 @@ export class GamesService {
   }
   async sell(
     id: string,
-    input: { quantity?: number; customerId?: string; document?: string },
+    input: { quantity?: number; customerId?: string; document?: string; cashierShiftId?: string; sellerUserId?: string },
   ) {
     await this.prepare();
     const saleCode = await this.pool.query(
@@ -187,6 +187,14 @@ export class GamesService {
       throw new BadRequestException(
         'La cantidad de cartones debe ser un entero positivo',
       );
+    let cashierShiftId = input.cashierShiftId;
+    if (!cashierShiftId && input.sellerUserId) {
+      const shift = await this.pool.query(`SELECT s.id FROM cashier_shifts s JOIN bingo_games g ON g.room_id IN (SELECT id FROM rooms WHERE local_id=s.local_id) WHERE g.id=$1 AND s.seller_user_id=$2 AND s.status='ABIERTA' ORDER BY s.opened_at DESC LIMIT 1`, [id, input.sellerUserId]);
+      cashierShiftId = shift.rows[0]?.id;
+    }
+    if (!cashierShiftId) throw new BadRequestException('Debe abrir una jornada de caja antes de vender');
+    const shift = await this.pool.query(`SELECT id FROM cashier_shifts WHERE id=$1 AND status='ABIERTA'`, [cashierShiftId]);
+    if (!shift.rowCount) throw new BadRequestException('La jornada de caja no está abierta');
     const result = await this.pool.query(
       `UPDATE bingo_games SET cards_sold=cards_sold+$1 WHERE id=$2 AND cards_sold+$1<=24000 AND now()>=sale_open_at AND now()<sale_close_at RETURNING cards_sold-$1+1 AS "rangeStart",cards_sold AS "rangeEnd",card_value AS "cardValue",total_prize AS "totalPrize",name`,
       [quantity, id],
@@ -196,7 +204,7 @@ export class GamesService {
         'No hay suficientes cartones disponibles o la venta está cerrada',
       );
     await this.pool.query(
-      `INSERT INTO bingo_sales (id,sale_code,game_id,customer_document,quantity,range_start,range_end) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      `INSERT INTO bingo_sales (id,sale_code,game_id,customer_document,quantity,range_start,range_end,cashier_shift_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
         randomUUID(),
         saleId,
@@ -205,6 +213,7 @@ export class GamesService {
         quantity,
         result.rows[0].rangeStart,
         result.rows[0].rangeEnd,
+        cashierShiftId,
       ],
     );
     return { ...result.rows[0], saleId };
